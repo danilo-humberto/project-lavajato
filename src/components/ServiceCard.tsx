@@ -1,5 +1,6 @@
 import { Car, Check } from "lucide-react";
 import type { WashType } from "../types/service";
+import { animateSelectionPress } from "../utils/animation";
 import { formatCurrency } from "../utils/order";
 
 type ServiceCardProps = {
@@ -24,10 +25,14 @@ export default function ServiceCard({
   return (
     <button
       type="button"
-      onClick={() => onSelect(id)}
+      data-animate="wash-card"
+      onClick={(event) => {
+        animateSelectionPress(event.currentTarget);
+        onSelect(id);
+      }}
       aria-pressed={selected}
       className={[
-        "relative flex min-h-40 w-full gap-4 rounded-2xl border bg-white p-5 text-left shadow-card transition",
+        "relative flex min-h-40 w-full gap-4 rounded-2xl border bg-white p-5 text-left shadow-card transition-colors duration-200",
         "focus:outline-none focus:ring-4 focus:ring-cyan-200",
         selected
           ? "border-cyan-400 bg-cyan-50/60 ring-1 ring-cyan-300"

@@ -1,5 +1,8 @@
+import { useEffect, useRef } from "react";
+import gsap from "gsap";
 import { BadgeCheck, Car, ClipboardList, Droplet, Info, Lock, Send, ShieldCheck, Users } from "lucide-react";
 import type { ExtraService } from "../types/service";
+import { prefersReducedMotion } from "../utils/animation";
 import { formatCurrency } from "../utils/order";
 
 type OrderSummaryProps = {
@@ -37,9 +40,46 @@ export default function OrderSummary({
   total,
   onSubmit,
 }: OrderSummaryProps) {
+  const totalRef = useRef<HTMLParagraphElement>(null);
+  const isFirstTotalRender = useRef(true);
+
+  useEffect(() => {
+    const totalElement = totalRef.current;
+
+    if (!totalElement || prefersReducedMotion()) {
+      return;
+    }
+
+    if (isFirstTotalRender.current) {
+      isFirstTotalRender.current = false;
+      return;
+    }
+
+    gsap.fromTo(
+      totalElement,
+      { y: -5, scale: 0.98, autoAlpha: 0.58 },
+      {
+        y: 0,
+        scale: 1,
+        autoAlpha: 1,
+        duration: 0.3,
+        ease: "power2.out",
+        overwrite: true,
+      },
+    );
+
+    return () => {
+      gsap.killTweensOf(totalElement);
+    };
+  }, [total]);
+
   return (
     <div className="space-y-5">
-      <aside className="rounded-3xl border border-sky-100 bg-white p-5 shadow-soft sm:p-6" aria-labelledby="order-summary-title">
+      <aside
+        data-animate="order-summary"
+        className="rounded-3xl border border-sky-100 bg-white p-5 shadow-soft sm:p-6"
+        aria-labelledby="order-summary-title"
+      >
         <div className="flex items-center gap-3">
           <span className="flex h-12 w-12 items-center justify-center rounded-2xl bg-sky-50 text-ocean">
             <ClipboardList className="h-7 w-7" aria-hidden="true" />
@@ -91,7 +131,9 @@ export default function OrderSummary({
 
         <div className="mt-6 flex items-center justify-between border-t border-sky-100 pt-5">
           <p className="text-xl font-black text-ink">Total</p>
-          <p className="text-3xl font-black text-ocean">{formatCurrency(total)}</p>
+          <p ref={totalRef} className="text-3xl font-black text-ocean">
+            {formatCurrency(total)}
+          </p>
         </div>
 
         <div className="mt-5 flex gap-3 rounded-2xl bg-sky-50 p-4 text-sm leading-5 text-slate-600">

@@ -9,7 +9,7 @@ const navItems = [
 
 export default function Header() {
   return (
-    <header className="sticky top-0 z-50 border-b border-sky-100/70 bg-white/90 backdrop-blur-xl">
+    <header data-animate="header" className="sticky top-0 z-50 border-b border-sky-100/70 bg-white/90 backdrop-blur-xl">
       <div className="mx-auto flex h-20 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
         <a href="#inicio" className="flex items-center gap-3" aria-label="Lava+ início">
           <span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-gradient-to-br from-cyan-400 to-ocean text-white shadow-card">

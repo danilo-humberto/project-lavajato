@@ -1,5 +1,6 @@
 import { Check, Sparkles } from "lucide-react";
 import type { ExtraService } from "../types/service";
+import { animateSelectionPress } from "../utils/animation";
 import { formatCurrency } from "../utils/order";
 
 type ExtraServiceCardProps = {
@@ -12,10 +13,14 @@ export default function ExtraServiceCard({ service, selected, onToggle }: ExtraS
   return (
     <button
       type="button"
-      onClick={() => onToggle(service.id)}
+      data-animate="extra-card"
+      onClick={(event) => {
+        animateSelectionPress(event.currentTarget);
+        onToggle(service.id);
+      }}
       aria-pressed={selected}
       className={[
-        "relative min-h-44 w-full rounded-2xl border bg-white p-5 text-left shadow-card transition",
+        "relative min-h-44 w-full rounded-2xl border bg-white p-5 text-left shadow-card transition-colors duration-200",
         "focus:outline-none focus:ring-4 focus:ring-cyan-200",
         selected ? "border-cyan-400 bg-cyan-50/60" : "border-sky-100 hover:border-cyan-200",
       ].join(" ")}

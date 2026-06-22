@@ -1,4 +1,5 @@
 import { ArrowRight, CalendarCheck } from "lucide-react";
+import { scrollToSection } from "../utils/animation";
 
 export default function Hero() {
   return (
@@ -6,6 +7,7 @@ export default function Hero() {
       <div className="mx-auto max-w-7xl">
         <div className="relative isolate min-h-[620px] overflow-hidden rounded-[2rem] bg-mist shadow-soft md:min-h-[540px]">
           <img
+            data-animate="hero-image"
             src="/hero-car-wash.png"
             alt="Carro azul recém-lavado com água e espuma"
             className="absolute inset-0 h-full w-full object-cover object-[63%_center]"
@@ -19,24 +21,33 @@ export default function Hero() {
 
           <div className="relative z-10 flex min-h-[620px] items-center px-6 py-14 sm:px-10 md:min-h-[540px] lg:px-14">
             <div className="max-w-xl">
-              <p className="mb-4 inline-flex rounded-full border border-cyan-200 bg-white/75 px-4 py-2 text-xs font-extrabold uppercase tracking-[0.18em] text-ocean shadow-card">
+              <p
+                data-animate="hero-eyebrow"
+                className="mb-4 inline-flex rounded-full border border-cyan-200 bg-white/75 px-4 py-2 text-xs font-extrabold uppercase tracking-[0.18em] text-ocean shadow-card"
+              >
                 Lavajato premium
               </p>
-              <h1 className="text-4xl font-black leading-[1.05] text-ink sm:text-5xl lg:text-6xl">
+              <h1 data-animate="hero-title" className="text-4xl font-black leading-[1.05] text-ink sm:text-5xl lg:text-6xl">
                 Seu carro{" "}
                 <span className="text-ocean">limpo, protegido e brilhando como novo!</span>
               </h1>
-              <p className="mt-6 max-w-lg text-lg leading-8 text-slate-700">
+              <p data-animate="hero-description" className="mt-6 max-w-lg text-lg leading-8 text-slate-700">
                 Lavagens profissionais com produtos Vonixx, acabamento de qualidade e atendimento rápido.
               </p>
-              <a
-                href="#servicos"
-                className="mt-8 inline-flex min-h-14 items-center justify-center gap-3 rounded-full bg-gradient-to-r from-aqua to-ocean px-7 text-base font-bold text-white shadow-card transition hover:-translate-y-0.5 hover:shadow-soft"
-              >
-                <CalendarCheck className="h-5 w-5" aria-hidden="true" />
-                Agendar lavagem
-                <ArrowRight className="h-5 w-5" aria-hidden="true" />
-              </a>
+              <span data-animate="hero-button" className="mt-8 inline-flex">
+                <a
+                  href="#servicos"
+                  onClick={(event) => {
+                    event.preventDefault();
+                    scrollToSection("servicos");
+                  }}
+                  className="inline-flex min-h-14 items-center justify-center gap-3 rounded-full bg-gradient-to-r from-aqua to-ocean px-7 text-base font-bold text-white shadow-card transition hover:-translate-y-0.5 hover:shadow-soft"
+                >
+                  <CalendarCheck className="h-5 w-5" aria-hidden="true" />
+                  Agendar lavagem
+                  <ArrowRight className="h-5 w-5" aria-hidden="true" />
+                </a>
+              </span>
             </div>
           </div>
         </div>

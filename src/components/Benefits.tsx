@@ -28,6 +28,7 @@ export default function Benefits() {
           return (
             <article
               key={benefit.title}
+              data-animate="benefit-card"
               className="flex items-center gap-4 rounded-3xl border border-sky-100 bg-white p-5 shadow-card"
             >
               <span className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-ocean to-aqua text-white shadow-card">

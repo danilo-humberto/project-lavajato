@@ -15,6 +15,7 @@ import {
   sanitizePhone,
   validateCustomerForm,
 } from "../utils/order";
+import { animateSelectionPress } from "../utils/animation";
 
 const vehicleIcons = {
   large: Truck,
@@ -121,9 +122,9 @@ export default function ServiceSelector() {
   }
 
   return (
-    <section id="servicos" className="bg-white px-4 py-14 sm:px-6 sm:py-20 lg:px-8">
+    <section id="servicos" data-animate="services-section" className="bg-white px-4 py-14 sm:px-6 sm:py-20 lg:px-8">
       <div className="mx-auto max-w-7xl">
-        <div className="mx-auto max-w-3xl text-center">
+        <div data-animate="services-heading" className="mx-auto max-w-3xl text-center">
           <h2 className="text-3xl font-black leading-tight text-ink sm:text-4xl">
             Escolha o <span className="text-ocean">serviço ideal</span> para seu carro
           </h2>
@@ -146,10 +147,14 @@ export default function ServiceSelector() {
                     <button
                       key={vehicle.id}
                       type="button"
-                      onClick={() => handleCarSizeSelect(vehicle.id)}
+                      data-animate="vehicle-card"
+                      onClick={(event) => {
+                        animateSelectionPress(event.currentTarget);
+                        handleCarSizeSelect(vehicle.id);
+                      }}
                       aria-pressed={isSelected}
                       className={[
-                        "relative rounded-2xl border bg-white p-5 text-center shadow-card transition",
+                        "relative rounded-2xl border bg-white p-5 text-center shadow-card transition-colors duration-200",
                         "focus:outline-none focus:ring-4 focus:ring-cyan-200",
                         isSelected
                           ? "border-cyan-400 bg-cyan-50/60 ring-1 ring-cyan-300"
