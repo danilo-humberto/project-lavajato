@@ -1,6 +1,6 @@
 const TRACKING_CODE_PREFIX = "LAVA-";
 const TRACKING_CODE_CHARACTERS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
-const TRACKING_CODE_LENGTH = 5;
+const TRACKING_CODE_LENGTH = 12;
 
 function getRandomIndex(max: number) {
   if (typeof crypto !== "undefined" && typeof crypto.getRandomValues === "function") {

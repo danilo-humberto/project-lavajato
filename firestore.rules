@@ -1,0 +1,376 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isAdmin() {
+      return isSignedIn()
+        && exists(/databases/$(database)/documents/admins/$(request.auth.uid));
+    }
+
+    function isTrackingCode(trackingCode) {
+      return trackingCode.matches('^LAVA-[A-Z0-9]{12}$');
+    }
+
+    function isInitialTimestamp(dateValue) {
+      return dateValue == request.time;
+    }
+
+    function isValidStatus(status) {
+      return status == 'pending'
+        || status == 'in_progress'
+        || status == 'finished';
+    }
+
+    function isValidPaymentMethod(paymentMethod) {
+      return paymentMethod == 'pix' || paymentMethod == 'cash';
+    }
+
+    function isValidCarSize(carSize) {
+      return carSize == 'large'
+        || carSize == 'medium'
+        || carSize == 'small';
+    }
+
+    function isValidWashType(washType) {
+      return washType == 'complete' || washType == 'simple';
+    }
+
+    function isValidCustomerName(customerName) {
+      return customerName is string
+        && customerName.size() >= 2
+        && customerName.size() <= 80;
+    }
+
+    function isValidCustomerPhone(customerPhone) {
+      return customerPhone is string
+        && customerPhone.matches('^[0-9]{10,11}$');
+    }
+
+    function isValidCarSizeLabel(carSize, carSizeLabel) {
+      return (carSize == 'large' && carSizeLabel == 'Carro grande')
+        || (carSize == 'medium' && (carSizeLabel == 'Carro médio' || carSizeLabel == 'Carro medio'))
+        || (carSize == 'small' && carSizeLabel == 'Carro pequeno');
+    }
+
+    function isValidWashTypeLabel(washType, washTypeLabel) {
+      return (washType == 'complete' && washTypeLabel == 'Lavagem completa')
+        || (washType == 'simple' && washTypeLabel == 'Lavagem simples');
+    }
+
+    function expectedWashPrice(carSize, washType) {
+      return carSize == 'large' && washType == 'complete' ? 80 :
+        carSize == 'large' && washType == 'simple' ? 60 :
+        carSize == 'medium' && washType == 'complete' ? 70 :
+        carSize == 'medium' && washType == 'simple' ? 50 :
+        carSize == 'small' && washType == 'complete' ? 60 :
+        carSize == 'small' && washType == 'simple' ? 40 :
+        -1;
+    }
+
+    function expectedWashPriceFromLabels(carSizeLabel, washTypeLabel) {
+      return carSizeLabel == 'Carro grande' && washTypeLabel == 'Lavagem completa' ? 80 :
+        carSizeLabel == 'Carro grande' && washTypeLabel == 'Lavagem simples' ? 60 :
+        (carSizeLabel == 'Carro médio' || carSizeLabel == 'Carro medio') && washTypeLabel == 'Lavagem completa' ? 70 :
+        (carSizeLabel == 'Carro médio' || carSizeLabel == 'Carro medio') && washTypeLabel == 'Lavagem simples' ? 50 :
+        carSizeLabel == 'Carro pequeno' && washTypeLabel == 'Lavagem completa' ? 60 :
+        carSizeLabel == 'Carro pequeno' && washTypeLabel == 'Lavagem simples' ? 40 :
+        -1;
+    }
+
+    function isSeatWashExtra(extra) {
+      return extra.id == 'seat-wash'
+        && extra.title == 'Lavagem dos bancos'
+        && extra.price == 200;
+    }
+
+    function isRoofWashExtra(extra) {
+      return extra.id == 'roof-wash'
+        && extra.title == 'Lavagem do teto'
+        && extra.price == 100;
+    }
+
+    function isUnderbodyWashExtra(extra) {
+      return extra.id == 'underbody-wash'
+        && extra.title == 'Lavagem da carroceria'
+        && extra.price == 200;
+    }
+
+    function isValidSelectedExtra(extra) {
+      return extra is map
+        && extra.keys().hasAll(['id', 'title', 'price'])
+        && extra.keys().hasOnly(['id', 'title', 'price'])
+        && extra.id is string
+        && extra.title is string
+        && extra.price is number
+        && (isSeatWashExtra(extra)
+          || isRoofWashExtra(extra)
+          || isUnderbodyWashExtra(extra));
+    }
+
+    function hasUniqueExtraIds(extras) {
+      return (extras.size() < 2 || extras[0].id != extras[1].id)
+        && (extras.size() < 3 || extras[0].id != extras[2].id)
+        && (extras.size() < 3 || extras[1].id != extras[2].id);
+    }
+
+    function isValidSelectedExtras(extras) {
+      return extras is list
+        && extras.size() <= 3
+        && (extras.size() < 1 || isValidSelectedExtra(extras[0]))
+        && (extras.size() < 2 || isValidSelectedExtra(extras[1]))
+        && (extras.size() < 3 || isValidSelectedExtra(extras[2]))
+        && hasUniqueExtraIds(extras);
+    }
+
+    function extraPriceAt(extras, index) {
+      return extras.size() > index ? extras[index].price : 0;
+    }
+
+    function selectedExtrasTotal(extras) {
+      return extraPriceAt(extras, 0)
+        + extraPriceAt(extras, 1)
+        + extraPriceAt(extras, 2);
+    }
+
+    function isValidTrackingExtra(extra) {
+      return extra is map
+        && extra.keys().hasAll(['title'])
+        && extra.keys().hasOnly(['title'])
+        && extra.title is string
+        && (extra.title == 'Lavagem dos bancos'
+          || extra.title == 'Lavagem do teto'
+          || extra.title == 'Lavagem da carroceria');
+    }
+
+    function hasUniqueTrackingExtraTitles(extras) {
+      return (extras.size() < 2 || extras[0].title != extras[1].title)
+        && (extras.size() < 3 || extras[0].title != extras[2].title)
+        && (extras.size() < 3 || extras[1].title != extras[2].title);
+    }
+
+    function isValidTrackingExtras(extras) {
+      return extras is list
+        && extras.size() <= 3
+        && (extras.size() < 1 || isValidTrackingExtra(extras[0]))
+        && (extras.size() < 2 || isValidTrackingExtra(extras[1]))
+        && (extras.size() < 3 || isValidTrackingExtra(extras[2]))
+        && hasUniqueTrackingExtraTitles(extras);
+    }
+
+    function trackingExtraPrice(extra) {
+      return extra.title == 'Lavagem dos bancos' ? 200 :
+        extra.title == 'Lavagem do teto' ? 100 :
+        extra.title == 'Lavagem da carroceria' ? 200 :
+        -1;
+    }
+
+    function trackingExtraPriceAt(extras, index) {
+      return extras.size() > index ? trackingExtraPrice(extras[index]) : 0;
+    }
+
+    function trackingExtrasTotal(extras) {
+      return trackingExtraPriceAt(extras, 0)
+        + trackingExtraPriceAt(extras, 1)
+        + trackingExtraPriceAt(extras, 2);
+    }
+
+    function trackingExtrasMatchOrder(orderExtras, trackingExtras) {
+      return orderExtras.size() == trackingExtras.size()
+        && (orderExtras.size() < 1 || orderExtras[0].title == trackingExtras[0].title)
+        && (orderExtras.size() < 2 || orderExtras[1].title == trackingExtras[1].title)
+        && (orderExtras.size() < 3 || orderExtras[2].title == trackingExtras[2].title);
+    }
+
+    function isValidOrderPricing(orderData) {
+      return orderData.washPrice is number
+        && orderData.extrasTotal is number
+        && orderData.total is number
+        && orderData.washPrice == expectedWashPrice(orderData.carSize, orderData.washType)
+        && orderData.extrasTotal == selectedExtrasTotal(orderData.selectedExtras)
+        && orderData.total == orderData.washPrice + orderData.extrasTotal;
+    }
+
+    function isValidOrderCreate(trackingCode) {
+      let data = request.resource.data;
+
+      return isTrackingCode(trackingCode)
+        && data.keys().hasAll([
+          'trackingCode',
+          'customerName',
+          'customerPhone',
+          'paymentMethod',
+          'carSize',
+          'carSizeLabel',
+          'washType',
+          'washTypeLabel',
+          'selectedExtras',
+          'washPrice',
+          'extrasTotal',
+          'total',
+          'status',
+          'createdAt',
+          'updatedAt',
+          'startedAt',
+          'finishedAt'
+        ])
+        && data.keys().hasOnly([
+          'trackingCode',
+          'customerName',
+          'customerPhone',
+          'paymentMethod',
+          'carSize',
+          'carSizeLabel',
+          'washType',
+          'washTypeLabel',
+          'selectedExtras',
+          'washPrice',
+          'extrasTotal',
+          'total',
+          'status',
+          'createdAt',
+          'updatedAt',
+          'startedAt',
+          'finishedAt'
+        ])
+        && data.trackingCode == trackingCode
+        && isValidCustomerName(data.customerName)
+        && isValidCustomerPhone(data.customerPhone)
+        && isValidPaymentMethod(data.paymentMethod)
+        && isValidCarSize(data.carSize)
+        && isValidWashType(data.washType)
+        && isValidCarSizeLabel(data.carSize, data.carSizeLabel)
+        && isValidWashTypeLabel(data.washType, data.washTypeLabel)
+        && isValidSelectedExtras(data.selectedExtras)
+        && isValidOrderPricing(data)
+        && data.status == 'pending'
+        && isInitialTimestamp(data.createdAt)
+        && isInitialTimestamp(data.updatedAt)
+        && data.startedAt == null
+        && data.finishedAt == null;
+    }
+
+    function isValidOrderStatusTransition() {
+      return (resource.data.status == 'pending'
+          && request.resource.data.status == 'in_progress'
+          && request.resource.data.startedAt == request.time
+          && request.resource.data.finishedAt == null)
+        || (resource.data.status == 'in_progress'
+          && request.resource.data.status == 'finished'
+          && request.resource.data.startedAt == resource.data.startedAt
+          && request.resource.data.finishedAt == request.time);
+    }
+
+    function isValidOrderStatusUpdate() {
+      return request.resource.data.diff(resource.data).affectedKeys().hasOnly([
+          'status',
+          'updatedAt',
+          'startedAt',
+          'finishedAt'
+        ])
+        && isValidStatus(request.resource.data.status)
+        && request.resource.data.updatedAt == request.time
+        && isValidOrderStatusTransition();
+    }
+
+    function isValidTrackingCreate(trackingCode) {
+      let data = request.resource.data;
+
+      return isTrackingCode(trackingCode)
+        && data.keys().hasAll([
+          'trackingCode',
+          'status',
+          'carSizeLabel',
+          'washTypeLabel',
+          'selectedExtras',
+          'total',
+          'createdAt',
+          'updatedAt'
+        ])
+        && data.keys().hasOnly([
+          'trackingCode',
+          'status',
+          'carSizeLabel',
+          'washTypeLabel',
+          'selectedExtras',
+          'total',
+          'createdAt',
+          'updatedAt'
+        ])
+        && data.trackingCode == trackingCode
+        && data.status == 'pending'
+        && (data.carSizeLabel == 'Carro grande'
+          || data.carSizeLabel == 'Carro médio'
+          || data.carSizeLabel == 'Carro medio'
+          || data.carSizeLabel == 'Carro pequeno')
+        && (data.washTypeLabel == 'Lavagem completa'
+          || data.washTypeLabel == 'Lavagem simples')
+        && isValidTrackingExtras(data.selectedExtras)
+        && data.total is number
+        && data.total == expectedWashPriceFromLabels(data.carSizeLabel, data.washTypeLabel)
+          + trackingExtrasTotal(data.selectedExtras)
+        && isInitialTimestamp(data.createdAt)
+        && isInitialTimestamp(data.updatedAt);
+    }
+
+    function trackingCreateMatchesOrder(trackingCode) {
+      let orderData = getAfter(/databases/$(database)/documents/orders/$(trackingCode)).data;
+      let trackingData = request.resource.data;
+
+      return orderData.trackingCode == trackingData.trackingCode
+        && orderData.status == trackingData.status
+        && orderData.carSizeLabel == trackingData.carSizeLabel
+        && orderData.washTypeLabel == trackingData.washTypeLabel
+        && orderData.total == trackingData.total
+        && orderData.createdAt == trackingData.createdAt
+        && orderData.updatedAt == trackingData.updatedAt
+        && trackingExtrasMatchOrder(orderData.selectedExtras, trackingData.selectedExtras);
+    }
+
+    function isValidTrackingStatusTransition() {
+      return (resource.data.status == 'pending'
+          && request.resource.data.status == 'in_progress')
+        || (resource.data.status == 'in_progress'
+          && request.resource.data.status == 'finished');
+    }
+
+    function isValidTrackingStatusUpdate() {
+      return request.resource.data.diff(resource.data).affectedKeys().hasOnly([
+          'status',
+          'updatedAt'
+        ])
+        && isValidStatus(request.resource.data.status)
+        && request.resource.data.updatedAt == request.time
+        && isValidTrackingStatusTransition();
+    }
+
+    match /orders/{trackingCode} {
+      allow read, list: if isAdmin();
+      allow create: if isValidOrderCreate(trackingCode);
+      allow update: if isAdmin() && isValidOrderStatusUpdate();
+      allow delete: if false;
+    }
+
+    match /tracking/{trackingCode} {
+      allow get: if isTrackingCode(trackingCode);
+      allow list: if false;
+      allow create: if isValidTrackingCreate(trackingCode)
+        && existsAfter(/databases/$(database)/documents/orders/$(trackingCode))
+        && trackingCreateMatchesOrder(trackingCode);
+      allow update: if isAdmin() && isValidTrackingStatusUpdate();
+      allow delete: if false;
+    }
+
+    match /admins/{userId} {
+      allow get: if isSignedIn() && request.auth.uid == userId;
+      allow list, create, update, delete: if false;
+    }
+
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
