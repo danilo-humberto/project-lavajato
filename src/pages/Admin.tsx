@@ -2,12 +2,10 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import gsap from "gsap";
 import { onAuthStateChanged, signOut } from "firebase/auth";
 import {
-  CalendarClock,
   CheckCircle2,
   ClipboardList,
   Clock3,
   LogOut,
-  MoreVertical,
   RefreshCw,
   Timer,
   X,

@@ -1,6 +1,6 @@
 import { useEffect, useRef } from "react";
 import gsap from "gsap";
-import { Droplets, MessageCircle } from "lucide-react";
+import { MessageCircle } from "lucide-react";
 import { prefersReducedMotion } from "../utils/animation";
 
 const navItems = [

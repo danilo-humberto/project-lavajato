@@ -28,16 +28,3 @@ export type CustomerFormValues = {
 };
 
 export type CustomerFormErrors = Partial<Record<keyof CustomerFormValues, string>>;
-
-export type OrderPayload = {
-  customerName: string;
-  customerPhone: string;
-  paymentMethod: PaymentMethod;
-  carSize: CarSize;
-  washType: WashType;
-  selectedExtras: string[];
-  washPrice: number;
-  extrasTotal: number;
-  total: number;
-  createdAt: string;
-};

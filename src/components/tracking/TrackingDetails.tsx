@@ -1,4 +1,4 @@
-import { Car, CheckCircle2, Droplet, Info } from "lucide-react";
+import { Car, CheckCircle2, Droplet } from "lucide-react";
 import type { TrackingOrder } from "../../types/order";
 import { formatCurrency } from "../../utils/order";
 
