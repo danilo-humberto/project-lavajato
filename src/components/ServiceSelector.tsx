@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { Car, Check, Truck } from "lucide-react";
+import { Car, Check, Scooter, Truck } from "lucide-react";
 import CustomerForm from "./CustomerForm";
 import ExtraServiceCard from "./ExtraServiceCard";
 import OrderSuccessModal from "./OrderSuccessModal";
@@ -24,6 +24,7 @@ const vehicleIcons = {
   large: Truck,
   medium: Car,
   small: Car,
+  motorcycle: Scooter,
 } satisfies Record<CarSize, typeof Car>;
 
 type StepHeaderProps = {
@@ -163,7 +164,7 @@ export default function ServiceSelector() {
         <div className="mx-auto max-w-7xl">
           <div data-animate="services-heading" className="mx-auto max-w-3xl text-center">
             <h2 className="text-3xl font-black leading-tight text-ink sm:text-4xl">
-              Escolha o <span className="text-ocean">serviço ideal</span> para seu carro
+              Escolha o <span className="text-ocean">serviço ideal</span> para seu veículo
             </h2>
             <p className="mt-3 text-base leading-7 text-slate-600">
               Selecione as opções abaixo e veja o resumo do seu pedido ao lado.
@@ -174,8 +175,8 @@ export default function ServiceSelector() {
           <div className="mt-12 grid gap-8 lg:grid-cols-[minmax(0,1fr)_350px] xl:grid-cols-[minmax(0,1fr)_390px]">
             <div className="space-y-8">
               <section>
-                <StepHeader number="1" title="Escolha o tamanho do seu carro" />
-                <div className="grid gap-4 sm:grid-cols-3">
+                <StepHeader number="1" title="Escolha o tipo do seu veículo" />
+                <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
                   {carSizes.map((vehicle) => {
                     const Icon = vehicleIcons[vehicle.id];
                     const isSelected = selectedCarSize === vehicle.id;

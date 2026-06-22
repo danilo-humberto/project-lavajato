@@ -13,6 +13,10 @@ export const washPrices: Record<CarSize, Record<WashType, number>> = {
     complete: 60,
     simple: 40,
   },
+  motorcycle: {
+    complete: 60,
+    simple: 40,
+  },
 };
 
 export const carSizes: CarSizeOption[] = [
@@ -30,6 +34,11 @@ export const carSizes: CarSizeOption[] = [
     id: "small",
     label: "Carro pequeno",
     example: "Hatchs, compactos",
+  },
+  {
+    id: "motorcycle",
+    label: "Moto",
+    example: "Scooters e motocicletas",
   },
 ];
 

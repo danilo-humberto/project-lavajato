@@ -98,7 +98,7 @@ export default function OrderSummary({
 
         <div className="mt-6 space-y-5 border-t border-sky-100 pt-5 text-sm">
           <div>
-            <p className="text-slate-500">Tamanho do carro</p>
+            <p className="text-slate-500">Veículo</p>
             <p className="mt-2 flex items-center gap-2 font-extrabold text-ink">
               <Car className="h-5 w-5 text-ocean" aria-hidden="true" />
               {carSizeLabel}

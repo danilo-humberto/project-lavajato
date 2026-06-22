@@ -1,4 +1,4 @@
-export type CarSize = "large" | "medium" | "small";
+export type CarSize = "large" | "medium" | "small" | "motorcycle";
 export type WashType = "complete" | "simple";
 export type PaymentMethod = "pix" | "cash";
 

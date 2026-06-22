@@ -18,6 +18,8 @@ describe("order helpers", () => {
     expect(getWashPrice("medium", "simple")).toBe(50);
     expect(getWashPrice("small", "complete")).toBe(60);
     expect(getWashPrice("small", "simple")).toBe(40);
+    expect(getWashPrice("motorcycle", "complete")).toBe(60);
+    expect(getWashPrice("motorcycle", "simple")).toBe(40);
   });
 
   it("calculates the total with selected extras", () => {

@@ -2,7 +2,7 @@ export type OrderStatus = "pending" | "in_progress" | "finished";
 
 export type PaymentMethod = "pix" | "cash";
 
-export type CarSize = "large" | "medium" | "small";
+export type CarSize = "large" | "medium" | "small" | "motorcycle";
 
 export type WashType = "complete" | "simple";
 

@@ -32,7 +32,8 @@ service cloud.firestore {
     function isValidCarSize(carSize) {
       return carSize == 'large'
         || carSize == 'medium'
-        || carSize == 'small';
+        || carSize == 'small'
+        || carSize == 'motorcycle';
     }
 
     function isValidWashType(washType) {
@@ -53,7 +54,8 @@ service cloud.firestore {
     function isValidCarSizeLabel(carSize, carSizeLabel) {
       return (carSize == 'large' && carSizeLabel == 'Carro grande')
         || (carSize == 'medium' && (carSizeLabel == 'Carro médio' || carSizeLabel == 'Carro medio'))
-        || (carSize == 'small' && carSizeLabel == 'Carro pequeno');
+        || (carSize == 'small' && carSizeLabel == 'Carro pequeno')
+        || (carSize == 'motorcycle' && carSizeLabel == 'Moto');
     }
 
     function isValidWashTypeLabel(washType, washTypeLabel) {
@@ -68,6 +70,8 @@ service cloud.firestore {
         carSize == 'medium' && washType == 'simple' ? 50 :
         carSize == 'small' && washType == 'complete' ? 60 :
         carSize == 'small' && washType == 'simple' ? 40 :
+        carSize == 'motorcycle' && washType == 'complete' ? 60 :
+        carSize == 'motorcycle' && washType == 'simple' ? 40 :
         -1;
     }
 
@@ -78,6 +82,8 @@ service cloud.firestore {
         (carSizeLabel == 'Carro médio' || carSizeLabel == 'Carro medio') && washTypeLabel == 'Lavagem simples' ? 50 :
         carSizeLabel == 'Carro pequeno' && washTypeLabel == 'Lavagem completa' ? 60 :
         carSizeLabel == 'Carro pequeno' && washTypeLabel == 'Lavagem simples' ? 40 :
+        carSizeLabel == 'Moto' && washTypeLabel == 'Lavagem completa' ? 60 :
+        carSizeLabel == 'Moto' && washTypeLabel == 'Lavagem simples' ? 40 :
         -1;
     }
 
@@ -305,7 +311,8 @@ service cloud.firestore {
         && (data.carSizeLabel == 'Carro grande'
           || data.carSizeLabel == 'Carro médio'
           || data.carSizeLabel == 'Carro medio'
-          || data.carSizeLabel == 'Carro pequeno')
+          || data.carSizeLabel == 'Carro pequeno'
+          || data.carSizeLabel == 'Moto')
         && (data.washTypeLabel == 'Lavagem completa'
           || data.washTypeLabel == 'Lavagem simples')
         && isValidTrackingExtras(data.selectedExtras)
