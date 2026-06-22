@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import type { ReactNode } from "react";
 import { Link, useParams } from "react-router-dom";
 import gsap from "gsap";
-import { AlertCircle, Loader2, SearchX } from "lucide-react";
+import { AlertCircle, ArrowLeft, Loader2, SearchX } from "lucide-react";
 import TrackingCodeCard from "../components/tracking/TrackingCodeCard";
 import TrackingDetails from "../components/tracking/TrackingDetails";
 import TrackingHelp from "../components/tracking/TrackingHelp";
@@ -59,7 +59,7 @@ export default function Tracking() {
 
     const context = gsap.context(() => {
       gsap.fromTo(
-        "[data-animate='tracking-code-card'], [data-animate='tracking-status'], [data-animate='tracking-details']",
+        "[data-animate='tracking-back-link'], [data-animate='tracking-code-card'], [data-animate='tracking-status'], [data-animate='tracking-details']",
         { y: 22, autoAlpha: 0 },
         {
           y: 0,
@@ -114,6 +114,15 @@ export default function Tracking() {
   return (
     <div ref={pageRef} className="min-h-screen bg-[#f8fdff] px-4 py-8 text-ink sm:px-6 lg:px-8">
       <main className="mx-auto max-w-6xl space-y-6">
+        <div data-animate="tracking-back-link">
+          <Link
+            to="/"
+            className="inline-flex min-h-11 items-center justify-center gap-2 rounded-2xl border border-sky-100 bg-white px-5 text-sm font-black text-ocean shadow-card transition hover:-translate-y-0.5 hover:border-cyan-200 hover:bg-cyan-50 hover:shadow-soft focus:outline-none focus:ring-4 focus:ring-cyan-100"
+          >
+            <ArrowLeft className="h-5 w-5" aria-hidden="true" />
+            Voltar para a landing
+          </Link>
+        </div>
         <TrackingCodeCard order={order} />
         <TrackingStatus order={order} />
         <TrackingDetails order={order} />
