@@ -14,7 +14,7 @@ export default function Home() {
   return (
     <div ref={rootRef} className="min-h-screen overflow-hidden bg-[#f8fdff]">
       <Header />
-      <main>
+      <main className="pt-20">
         <Hero />
         <Benefits />
         <ServiceSelector />
