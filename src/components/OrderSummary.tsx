@@ -11,6 +11,8 @@ type OrderSummaryProps = {
   washPrice: number;
   selectedExtras: ExtraService[];
   total: number;
+  isSubmitting: boolean;
+  submitError: string | null;
   onSubmit: () => void;
 };
 
@@ -38,6 +40,8 @@ export default function OrderSummary({
   washPrice,
   selectedExtras,
   total,
+  isSubmitting,
+  submitError,
   onSubmit,
 }: OrderSummaryProps) {
   const totalRef = useRef<HTMLParagraphElement>(null);
@@ -141,12 +145,19 @@ export default function OrderSummary({
           <p>O valor pode variar de acordo com o estado do veículo.</p>
         </div>
 
+        {submitError ? (
+          <div className="mt-5 rounded-2xl border border-red-200 bg-red-50 p-4 text-sm font-semibold leading-6 text-red-700" role="alert">
+            {submitError}
+          </div>
+        ) : null}
+
         <button
           type="button"
+          disabled={isSubmitting}
           onClick={onSubmit}
-          className="mt-5 inline-flex min-h-14 w-full items-center justify-center gap-3 rounded-2xl bg-gradient-to-r from-aqua to-ocean px-6 text-base font-black text-white shadow-card transition hover:-translate-y-0.5 hover:shadow-soft focus:outline-none focus:ring-4 focus:ring-cyan-200"
+          className="mt-5 inline-flex min-h-14 w-full items-center justify-center gap-3 rounded-2xl bg-gradient-to-r from-aqua to-ocean px-6 text-base font-black text-white shadow-card transition hover:-translate-y-0.5 hover:shadow-soft focus:outline-none focus:ring-4 focus:ring-cyan-200 disabled:cursor-not-allowed disabled:opacity-70 disabled:hover:translate-y-0 disabled:hover:shadow-card"
         >
-          Solicitar serviço
+          {isSubmitting ? "Enviando pedido..." : "Solicitar serviço"}
           <Send className="h-5 w-5" aria-hidden="true" />
         </button>
 

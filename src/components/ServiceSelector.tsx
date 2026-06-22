@@ -2,10 +2,13 @@ import { useMemo, useState } from "react";
 import { Car, Check, Truck } from "lucide-react";
 import CustomerForm from "./CustomerForm";
 import ExtraServiceCard from "./ExtraServiceCard";
+import OrderSuccessModal from "./OrderSuccessModal";
 import OrderSummary from "./OrderSummary";
 import ServiceCard from "./ServiceCard";
 import { carSizes, extraServices, washTypes } from "../data/services";
-import type { CarSize, CustomerFormErrors, CustomerFormValues, OrderPayload, WashType } from "../types/service";
+import { createOrder } from "../services/ordersService";
+import type { CreateOrderInput } from "../types/order";
+import type { CarSize, CustomerFormErrors, CustomerFormValues, WashType } from "../types/service";
 import {
   getExtrasTotal,
   getOrderTotal,
@@ -39,17 +42,21 @@ function StepHeader({ number, title }: StepHeaderProps) {
   );
 }
 
+const initialFormValues: CustomerFormValues = {
+  customerName: "",
+  customerPhone: "",
+  paymentMethod: "",
+};
+
 export default function ServiceSelector() {
   const [selectedCarSize, setSelectedCarSize] = useState<CarSize>("large");
   const [selectedWashType, setSelectedWashType] = useState<WashType>("complete");
   const [selectedExtras, setSelectedExtras] = useState<string[]>([]);
-  const [formValues, setFormValues] = useState<CustomerFormValues>({
-    customerName: "",
-    customerPhone: "",
-    paymentMethod: "",
-  });
+  const [formValues, setFormValues] = useState<CustomerFormValues>(initialFormValues);
   const [formErrors, setFormErrors] = useState<CustomerFormErrors>({});
-  const [successMessage, setSuccessMessage] = useState<string | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState<string | null>(null);
+  const [createdTrackingCode, setCreatedTrackingCode] = useState<string | null>(null);
 
   const selectedCarSizeData = carSizes.find((carSize) => carSize.id === selectedCarSize) ?? carSizes[0];
   const selectedWashTypeData = washTypes.find((washType) => washType.id === selectedWashType) ?? washTypes[0];
@@ -61,12 +68,12 @@ export default function ServiceSelector() {
 
   function handleCarSizeSelect(carSize: CarSize) {
     setSelectedCarSize(carSize);
-    setSuccessMessage(null);
+    setSubmitError(null);
   }
 
   function handleWashTypeSelect(washType: WashType) {
     setSelectedWashType(washType);
-    setSuccessMessage(null);
+    setSubmitError(null);
   }
 
   function handleExtraToggle(extraId: string) {
@@ -75,7 +82,7 @@ export default function ServiceSelector() {
         ? currentExtras.filter((selectedExtraId) => selectedExtraId !== extraId)
         : [...currentExtras, extraId],
     );
-    setSuccessMessage(null);
+    setSubmitError(null);
   }
 
   function handleFormChange<Field extends keyof CustomerFormValues>(field: Field, value: CustomerFormValues[Field]) {
@@ -88,15 +95,30 @@ export default function ServiceSelector() {
       delete nextErrors[field];
       return nextErrors;
     });
-    setSuccessMessage(null);
+    setSubmitError(null);
   }
 
-  function handleSubmit() {
+  function resetOrderForm() {
+    setSelectedCarSize("large");
+    setSelectedWashType("complete");
+    setSelectedExtras([]);
+    setFormValues(initialFormValues);
+    setFormErrors({});
+    setSubmitError(null);
+    setCreatedTrackingCode(null);
+    setIsSubmitting(false);
+  }
+
+  async function handleSubmit() {
+    if (isSubmitting) {
+      return;
+    }
+
     const nextErrors = validateCustomerForm(formValues);
     setFormErrors(nextErrors);
 
     if (hasFormErrors(nextErrors)) {
-      setSuccessMessage(null);
+      setSubmitError(null);
       return;
     }
 
@@ -104,131 +126,148 @@ export default function ServiceSelector() {
       return;
     }
 
-    const order: OrderPayload = {
+    const orderData: CreateOrderInput = {
       customerName: formValues.customerName.trim(),
       customerPhone: sanitizePhone(formValues.customerPhone),
       paymentMethod: formValues.paymentMethod,
       carSize: selectedCarSize,
+      carSizeLabel: selectedCarSizeData.label,
       washType: selectedWashType,
-      selectedExtras,
+      washTypeLabel: selectedWashTypeData.label,
+      selectedExtras: selectedExtraServices.map((extra) => ({
+        id: extra.id,
+        title: extra.title,
+        price: extra.price,
+      })),
       washPrice,
       extrasTotal,
       total,
-      createdAt: new Date().toISOString(),
     };
 
-    console.log("Pedido criado:", order);
-    setSuccessMessage("Pedido criado com sucesso! Em breve entraremos em contato pelo WhatsApp.");
+    try {
+      setIsSubmitting(true);
+      setSubmitError(null);
+      const trackingCode = await createOrder(orderData);
+      setCreatedTrackingCode(trackingCode);
+    } catch (error) {
+      console.error("Erro ao criar pedido:", error);
+      setSubmitError("Não foi possível enviar seu pedido. Tente novamente.");
+    } finally {
+      setIsSubmitting(false);
+    }
   }
 
   return (
-    <section id="servicos" data-animate="services-section" className="bg-white px-4 py-14 sm:px-6 sm:py-20 lg:px-8">
-      <div className="mx-auto max-w-7xl">
-        <div data-animate="services-heading" className="mx-auto max-w-3xl text-center">
-          <h2 className="text-3xl font-black leading-tight text-ink sm:text-4xl">
-            Escolha o <span className="text-ocean">serviço ideal</span> para seu carro
-          </h2>
-          <p className="mt-3 text-base leading-7 text-slate-600">
-            Selecione as opções abaixo e veja o resumo do seu pedido ao lado.
-          </p>
-          <div className="mx-auto mt-5 h-1 w-16 rounded-full bg-gradient-to-r from-ocean to-aqua" />
-        </div>
+    <>
+      <section id="servicos" data-animate="services-section" className="bg-white px-4 py-14 sm:px-6 sm:py-20 lg:px-8">
+        <div className="mx-auto max-w-7xl">
+          <div data-animate="services-heading" className="mx-auto max-w-3xl text-center">
+            <h2 className="text-3xl font-black leading-tight text-ink sm:text-4xl">
+              Escolha o <span className="text-ocean">serviço ideal</span> para seu carro
+            </h2>
+            <p className="mt-3 text-base leading-7 text-slate-600">
+              Selecione as opções abaixo e veja o resumo do seu pedido ao lado.
+            </p>
+            <div className="mx-auto mt-5 h-1 w-16 rounded-full bg-gradient-to-r from-ocean to-aqua" />
+          </div>
 
-        <div className="mt-12 grid gap-8 lg:grid-cols-[minmax(0,1fr)_350px] xl:grid-cols-[minmax(0,1fr)_390px]">
-          <div className="space-y-8">
-            <section>
-              <StepHeader number="1" title="Escolha o tamanho do seu carro" />
-              <div className="grid gap-4 sm:grid-cols-3">
-                {carSizes.map((vehicle) => {
-                  const Icon = vehicleIcons[vehicle.id];
-                  const isSelected = selectedCarSize === vehicle.id;
+          <div className="mt-12 grid gap-8 lg:grid-cols-[minmax(0,1fr)_350px] xl:grid-cols-[minmax(0,1fr)_390px]">
+            <div className="space-y-8">
+              <section>
+                <StepHeader number="1" title="Escolha o tamanho do seu carro" />
+                <div className="grid gap-4 sm:grid-cols-3">
+                  {carSizes.map((vehicle) => {
+                    const Icon = vehicleIcons[vehicle.id];
+                    const isSelected = selectedCarSize === vehicle.id;
 
-                  return (
-                    <button
-                      key={vehicle.id}
-                      type="button"
-                      data-animate="vehicle-card"
-                      onClick={(event) => {
-                        animateSelectionPress(event.currentTarget);
-                        handleCarSizeSelect(vehicle.id);
-                      }}
-                      aria-pressed={isSelected}
-                      className={[
-                        "relative rounded-2xl border bg-white p-5 text-center shadow-card transition-colors duration-200",
-                        "focus:outline-none focus:ring-4 focus:ring-cyan-200",
-                        isSelected
-                          ? "border-cyan-400 bg-cyan-50/60 ring-1 ring-cyan-300"
-                          : "border-sky-100 hover:border-cyan-200",
-                      ].join(" ")}
-                    >
-                      <span className="mx-auto flex h-16 w-16 items-center justify-center rounded-3xl bg-sky-50 text-ocean">
-                        <Icon className="h-9 w-9" aria-hidden="true" />
-                      </span>
-                      <span className="mt-4 block text-base font-black text-ink">{vehicle.label}</span>
-                      <span className="mt-1 block text-sm text-slate-600">Ex: {vehicle.example}</span>
-                      {isSelected ? (
-                        <span className="absolute right-4 top-4 flex h-7 w-7 items-center justify-center rounded-full bg-aqua text-white">
-                          <Check className="h-4 w-4" aria-hidden="true" />
+                    return (
+                      <button
+                        key={vehicle.id}
+                        type="button"
+                        data-animate="vehicle-card"
+                        onClick={(event) => {
+                          animateSelectionPress(event.currentTarget);
+                          handleCarSizeSelect(vehicle.id);
+                        }}
+                        aria-pressed={isSelected}
+                        className={[
+                          "relative rounded-2xl border bg-white p-5 text-center shadow-card transition-colors duration-200",
+                          "focus:outline-none focus:ring-4 focus:ring-cyan-200",
+                          isSelected
+                            ? "border-cyan-400 bg-cyan-50/60 ring-1 ring-cyan-300"
+                            : "border-sky-100 hover:border-cyan-200",
+                        ].join(" ")}
+                      >
+                        <span className="mx-auto flex h-16 w-16 items-center justify-center rounded-3xl bg-sky-50 text-ocean">
+                          <Icon className="h-9 w-9" aria-hidden="true" />
                         </span>
-                      ) : null}
-                    </button>
-                  );
-                })}
-              </div>
-            </section>
+                        <span className="mt-4 block text-base font-black text-ink">{vehicle.label}</span>
+                        <span className="mt-1 block text-sm text-slate-600">Ex: {vehicle.example}</span>
+                        {isSelected ? (
+                          <span className="absolute right-4 top-4 flex h-7 w-7 items-center justify-center rounded-full bg-aqua text-white">
+                            <Check className="h-4 w-4" aria-hidden="true" />
+                          </span>
+                        ) : null}
+                      </button>
+                    );
+                  })}
+                </div>
+              </section>
 
-            <section>
-              <StepHeader number="2" title="Escolha o tipo de lavagem" />
-              <div className="grid gap-4 md:grid-cols-2">
-                {washTypes.map((washType) => (
-                  <ServiceCard
-                    key={washType.id}
-                    id={washType.id}
-                    title={washType.label}
-                    vehicleLabel={selectedCarSizeData.label}
-                    description={washType.description}
-                    price={getWashPrice(selectedCarSize, washType.id)}
-                    selected={selectedWashType === washType.id}
-                    onSelect={handleWashTypeSelect}
-                  />
-                ))}
-              </div>
-            </section>
+              <section>
+                <StepHeader number="2" title="Escolha o tipo de lavagem" />
+                <div className="grid gap-4 md:grid-cols-2">
+                  {washTypes.map((washType) => (
+                    <ServiceCard
+                      key={washType.id}
+                      id={washType.id}
+                      title={washType.label}
+                      vehicleLabel={selectedCarSizeData.label}
+                      description={washType.description}
+                      price={getWashPrice(selectedCarSize, washType.id)}
+                      selected={selectedWashType === washType.id}
+                      onSelect={handleWashTypeSelect}
+                    />
+                  ))}
+                </div>
+              </section>
 
-            <section>
-              <StepHeader number="3" title="Adicione serviços extras (opcional)" />
-              <div className="grid gap-4 md:grid-cols-3">
-                {extraServices.map((service) => (
-                  <ExtraServiceCard
-                    key={service.id}
-                    service={service}
-                    selected={selectedExtras.includes(service.id)}
-                    onToggle={handleExtraToggle}
-                  />
-                ))}
-              </div>
-            </section>
+              <section>
+                <StepHeader number="3" title="Adicione serviços extras (opcional)" />
+                <div className="grid gap-4 md:grid-cols-3">
+                  {extraServices.map((service) => (
+                    <ExtraServiceCard
+                      key={service.id}
+                      service={service}
+                      selected={selectedExtras.includes(service.id)}
+                      onToggle={handleExtraToggle}
+                    />
+                  ))}
+                </div>
+              </section>
 
-            <CustomerForm
-              values={formValues}
-              errors={formErrors}
-              successMessage={successMessage}
-              onChange={handleFormChange}
-            />
-          </div>
+              <CustomerForm values={formValues} errors={formErrors} successMessage={null} onChange={handleFormChange} />
+            </div>
 
-          <div className="lg:sticky lg:top-28 lg:self-start">
-            <OrderSummary
-              carSizeLabel={selectedCarSizeData.label}
-              washTypeLabel={selectedWashTypeData.label}
-              washPrice={washPrice}
-              selectedExtras={selectedExtraServices}
-              total={total}
-              onSubmit={handleSubmit}
-            />
+            <div className="lg:sticky lg:top-28 lg:self-start">
+              <OrderSummary
+                carSizeLabel={selectedCarSizeData.label}
+                washTypeLabel={selectedWashTypeData.label}
+                washPrice={washPrice}
+                selectedExtras={selectedExtraServices}
+                total={total}
+                isSubmitting={isSubmitting}
+                submitError={submitError}
+                onSubmit={handleSubmit}
+              />
+            </div>
           </div>
         </div>
-      </div>
-    </section>
+      </section>
+
+      {createdTrackingCode ? (
+        <OrderSuccessModal trackingCode={createdTrackingCode} onCreateAnother={resetOrderForm} />
+      ) : null}
+    </>
   );
 }
